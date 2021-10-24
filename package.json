@@ -1,0 +1,40 @@
+{
+  "name": "@robinblomberg/safe-request",
+  "version": "0.1.0",
+  "author": "Robin Blomberg",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RobinBlomberg/safe-request.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RobinBlomberg/safe-request/issues"
+  },
+  "homepage": "https://github.com/RobinBlomberg/safe-request#readme",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint ./src",
+    "test": "tsc-watch --onSuccess \"node --enable-source-maps ./dist/tests/index.test.js\""
+  },
+  "dependencies": {
+    "isomorphic-unfetch": "^3.1.0"
+  },
+  "devDependencies": {
+    "@robinblomberg/eslint-config-prettier": "^0.1.4",
+    "@robinblomberg/eslint-config-robinblomberg": "^0.9.1",
+    "@robinblomberg/prettier-config": "^0.1.2",
+    "@robinblomberg/safe-express": "^0.4.6",
+    "@types/express": "^4.17.13",
+    "express": "^4.17.1",
+    "tsc-watch": "^4.5.0",
+    "zod": "^3.11.4"
+  },
+  "eslintConfig": {
+    "extends": [
+      "@robinblomberg/robinblomberg",
+      "@robinblomberg/prettier"
+    ]
+  },
+  "prettier": "@robinblomberg/prettier-config"
+}
