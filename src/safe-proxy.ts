@@ -1,7 +1,8 @@
 import { ApiSchema } from '@robinblomberg/safe-express';
 import fetch from 'isomorphic-unfetch';
+import { MethodOf, PathOf, RequestBodyOf } from '.';
 import { RequestError } from './request-error';
-import { FlattenedApi, RequestPayload, ResponseBodyOf } from './types';
+import { RequestPayload, ResponseBodyOf } from './types';
 
 export class SafeProxy<TApi extends ApiSchema> {
   readonly #baseUrl: string;
@@ -11,9 +12,10 @@ export class SafeProxy<TApi extends ApiSchema> {
   }
 
   async request<
-    TPath extends keyof FlattenedApi<TApi>,
-    TMethod extends keyof FlattenedApi<TApi>[TPath] & string,
-  >(method: TMethod, path: TPath, payload: RequestPayload = {}) {
+    TPath extends PathOf<TApi>,
+    TMethod extends MethodOf<TApi, TPath>,
+    TBody extends RequestBodyOf<TApi, TPath, TMethod>,
+  >(method: TMethod, path: TPath, payload: RequestPayload<TBody> = {}) {
     const headers = { ...(payload.headers ?? {}) };
     const requestInit: RequestInit = {
       headers,
@@ -36,13 +38,11 @@ export class SafeProxy<TApi extends ApiSchema> {
       throw new RequestError(errorDto.code);
     }
 
-    const body: ResponseBodyOf<FlattenedApi<TApi>[TPath][TMethod]> =
-      await response.json();
+    const body: ResponseBodyOf<TApi, TPath, TMethod> = await response.json();
 
     return {
       body,
       headers: Object.fromEntries(response.headers.entries()),
-      ok: response.ok,
       redirected: response.redirected,
       status: response.status,
       statusText: response.statusText,

@@ -12,7 +12,10 @@ type HealthApi = typeof healthApi;
 
 const healthApi = {
   '/': {
-    get: {
+    post: {
+      requestBody: z.object({
+        name: z.string(),
+      }),
       responseBody: z.string(),
     },
   },
@@ -22,34 +25,35 @@ const app = express();
 
 const healthRouter = new Router<HealthApi>(healthApi);
 
-healthRouter.get('/', (req, res) => {
-  res.json('Hello world!');
+healthRouter.post('/', (req, res) => {
+  res.json(`Hello ${req.body.name}!`);
 });
 
 app.use('/api/v1/health', healthRouter.router);
 
-app.listen(3000);
+app.listen(3030, async () => {
+  const proxy = new SafeProxy<Api>('http://localhost:3030');
 
-(async () => {
-  const proxy = new SafeProxy<Api>('http://localhost:3000');
+  const response = await proxy.request('post', '/api/v1/health', {
+    body: {
+      name: 'Frank',
+    },
+  });
 
-  const response = await proxy.request('get', '/api/v1/health');
-
-  strictEqual(response.body, 'Hello world!');
+  strictEqual(response.body, 'Hello Frank!');
   strictEqual(response.headers.connection, 'close');
   strictEqual(response.headers['content-length'], '14');
   strictEqual(
     response.headers['content-type'],
     'application/json; charset=utf-8',
   );
-  strictEqual(response.headers.etag, 'W/"e-nkbG/vEV8ab/vH4HRSEWq+7z/MU"');
+  strictEqual(response.headers.etag, 'W/"e-60g0B+XmNKqrpbDcQt0+AkLUpmU"');
   strictEqual(response.headers['x-powered-by'], 'Express');
-  strictEqual(response.ok, true);
   strictEqual(response.redirected, false);
   strictEqual(response.status, 200);
   strictEqual(response.statusText, 'OK');
-  strictEqual(response.url, 'http://localhost:3000/api/v1/health');
+  strictEqual(response.url, 'http://localhost:3030/api/v1/health');
 
   // eslint-disable-next-line no-console
   console.log('All tests passed.');
-})();
+});
