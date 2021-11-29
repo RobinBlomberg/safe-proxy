@@ -19,7 +19,7 @@ export class SafeProxy<TApi extends ApiSchema> {
     const headers = { ...(payload.headers ?? {}) };
     const requestInit: RequestInit = {
       headers,
-      method,
+      method: method.toUpperCase(),
     };
 
     if (payload.body !== undefined) {
@@ -35,6 +35,8 @@ export class SafeProxy<TApi extends ApiSchema> {
 
     if (!response.ok) {
       const errorDto = await response.json();
+
+      // eslint-disable-next-line @typescript-eslint/no-throw-literal
       throw new RequestError(errorDto.code);
     }
 
