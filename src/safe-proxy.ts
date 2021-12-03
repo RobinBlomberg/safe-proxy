@@ -4,7 +4,39 @@ import { MethodOf, PathOf, RequestBodyOf } from '.';
 import { RequestError } from './request-error';
 import { RequestPayload, ResponseBodyOf } from './types';
 
+/**
+ * Naïve but simple date regex.
+ * Will also match incorrect dates such as 2021-19-39T29:69:99.123Z.
+ */
+const DATE_REGEX =
+  /^[0-9]{4}-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-6][0-9]:[0-9]{2}\.[0-9]{3}Z$/;
+
+export type ErrorResponseBody = {
+  code: string;
+};
+
 export class SafeProxy<TApi extends ApiSchema> {
+  private static parseErrorCode(value: unknown) {
+    if (
+      value instanceof Object &&
+      'code' in value &&
+      typeof (value as ErrorResponseBody).code === 'string'
+    ) {
+      return (value as ErrorResponseBody).code;
+    }
+
+    return '';
+  }
+
+  /**
+   * TODO: Use a Zod schema to identify specified dates in order to avoid accidental conversions.
+   */
+  private static parseJson(string: string) {
+    return JSON.parse(string, (key, value) => {
+      return DATE_REGEX.test(value) ? new Date(value) : value;
+    });
+  }
+
   readonly #baseUrl: string;
 
   constructor(baseUrl: string) {
@@ -32,16 +64,15 @@ export class SafeProxy<TApi extends ApiSchema> {
     }
 
     const response = await fetch(`${this.#baseUrl}${path}`, requestInit);
+    const responseText = await response.text();
+    const responseBody = SafeProxy.parseJson(responseText);
 
     if (!response.ok) {
-      const errorDto = await response.json();
-
-      // eslint-disable-next-line @typescript-eslint/no-throw-literal
-      throw new RequestError(errorDto.code);
+      const errorCode = SafeProxy.parseErrorCode(responseBody);
+      throw new RequestError(errorCode);
     }
 
-    const body: ResponseBodyOf<TApi, TPath, TMethod> = await response.json();
-
+    const body: ResponseBodyOf<TApi, TPath, TMethod> = responseBody;
     return {
       body,
       headers: Object.fromEntries(response.headers.entries()),
