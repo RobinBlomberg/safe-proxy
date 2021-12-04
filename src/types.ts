@@ -43,6 +43,7 @@ export type RequestPayload<TBody> = {
   body?: TBody;
   credentials?: 'include';
   headers?: Record<string, string>;
+  query?: unknown;
 };
 
 export type ResponseBodyOf<

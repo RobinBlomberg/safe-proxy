@@ -1,6 +1,6 @@
 {
   "name": "@robinblomberg/safe-request",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": "Robin Blomberg",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,7 +18,8 @@
     "test": "tsc-watch --onSuccess \"node --enable-source-maps ./dist/tests/index.test.js\""
   },
   "dependencies": {
-    "isomorphic-unfetch": "^3.1.0"
+    "isomorphic-unfetch": "^3.1.0",
+    "qs": "^6.10.1"
   },
   "devDependencies": {
     "@robinblomberg/eslint-config-prettier": "^0.1.4",

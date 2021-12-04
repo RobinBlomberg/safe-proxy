@@ -1,5 +1,6 @@
 import { ApiSchema } from '@robinblomberg/safe-express';
 import fetch from 'isomorphic-unfetch';
+import qs from 'qs';
 import { MethodOf, PathOf, RequestBodyOf } from '.';
 import { RequestError } from './request-error';
 import { RequestPayload, ResponseBodyOf } from './types';
@@ -53,6 +54,7 @@ export class SafeProxy<TApi extends ApiSchema> {
       headers,
       method: method.toUpperCase(),
     };
+    let url = `${this.#baseUrl}${path}`;
 
     if (payload.body !== undefined) {
       requestInit.body = JSON.stringify(payload.body);
@@ -63,7 +65,11 @@ export class SafeProxy<TApi extends ApiSchema> {
       requestInit.credentials = 'include';
     }
 
-    const response = await fetch(`${this.#baseUrl}${path}`, requestInit);
+    if (payload.query !== undefined) {
+      url += qs.stringify(payload.query, { addQueryPrefix: true });
+    }
+
+    const response = await fetch(url, requestInit);
     const responseText = await response.text();
     const responseBody = SafeProxy.parseJson(responseText);
 
