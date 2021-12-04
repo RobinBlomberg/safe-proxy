@@ -1,7 +1,6 @@
 import { Router } from '@robinblomberg/safe-express';
 import { deepStrictEqual, rejects, strictEqual } from 'assert';
 import express from 'express';
-import qs from 'qs';
 import { z } from 'zod';
 import { RequestError, SafeProxy } from '..';
 
@@ -12,7 +11,7 @@ type Api = {
 type HealthApi = typeof healthApi;
 
 const companyRequestSchema = z.strictObject({
-  companies: z.strictObject({
+  company: z.strictObject({
     employees: z.array(
       z.strictObject({
         email: z.string().email(),
@@ -45,7 +44,8 @@ const healthApi = {
     },
   },
   '/echo': {
-    post: {
+    get: {
+      query: companyRequestSchema,
       responseBody: companyRequestSchema,
     },
   },
@@ -77,14 +77,13 @@ healthRouter.post('/', (req, res) => {
   });
 });
 
-healthRouter.post('/echo', (req, res) => {
-  const data: any = qs.parse(req.query);
-  res.json(data);
+healthRouter.get('/echo', (req, res) => {
+  res.json(req.query);
 });
 
 healthRouter.get('/error/with-code', (req, res) => {
   res.status(400).json({
-    code: 'SOMETHING_WENT_WRONG',
+    code: 'custom_error_code',
   });
 });
 
@@ -128,13 +127,18 @@ app.listen(3030, async () => {
 
   // Test error responses:
   {
-    void rejects(() => {
-      return proxy.request('get', '/api/v1/health/error/with-code');
-    }, new RequestError('SOMETHING_WENT_WRONG'));
+    void rejects(
+      () => {
+        return proxy.request('get', '/api/v1/health/error/with-code');
+      },
+      new RequestError('custom_error_code', {
+        code: 'custom_error_code',
+      }),
+    );
 
     void rejects(() => {
       return proxy.request('get', '/api/v1/health/error/without-code');
-    }, new RequestError(''));
+    }, new RequestError('', null));
   }
 
   // Test queries:
@@ -157,7 +161,7 @@ app.listen(3030, async () => {
       },
     };
 
-    const response = await proxy.request('post', '/api/v1/health/echo', {
+    const response = await proxy.request('get', '/api/v1/health/echo', {
       query,
     });
 

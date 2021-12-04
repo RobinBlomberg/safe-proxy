@@ -1,11 +1,11 @@
-export class RequestError<TCode extends string> extends Error {
-  readonly code: TCode;
+export class RequestError<TError> extends Error {
+  readonly error: TError;
   readonly name = RequestError.name;
 
-  constructor(code: TCode, message: string = code) {
-    super(message ?? code);
+  constructor(message: string, error: TError) {
+    super(message);
 
-    this.code = code;
+    this.error = error;
 
     Object.setPrototypeOf(this, RequestError.prototype);
   }

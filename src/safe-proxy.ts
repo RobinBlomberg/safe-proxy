@@ -1,9 +1,9 @@
 import { ApiSchema } from '@robinblomberg/safe-express';
 import fetch from 'isomorphic-unfetch';
-import qs from 'qs';
-import { MethodOf, PathOf, RequestBodyOf } from '.';
+import JSON5 from 'json5';
+import { MethodOf, PathOf, RequestBodyOf, ResponseBodyOf } from '.';
 import { RequestError } from './request-error';
-import { RequestPayload, ResponseBodyOf } from './types';
+import { RequestPayload } from './types';
 
 /**
  * Naïve but simple date regex.
@@ -17,18 +17,6 @@ export type ErrorResponseBody = {
 };
 
 export class SafeProxy<TApi extends ApiSchema> {
-  private static parseErrorCode(value: unknown) {
-    if (
-      value instanceof Object &&
-      'code' in value &&
-      typeof (value as ErrorResponseBody).code === 'string'
-    ) {
-      return (value as ErrorResponseBody).code;
-    }
-
-    return '';
-  }
-
   /**
    * TODO: Use a Zod schema to identify specified dates in order to avoid accidental conversions.
    */
@@ -66,7 +54,7 @@ export class SafeProxy<TApi extends ApiSchema> {
     }
 
     if (payload.query !== undefined) {
-      url += qs.stringify(payload.query, { addQueryPrefix: true });
+      url += `?${encodeURIComponent(JSON5.stringify(payload.query))}`;
     }
 
     const response = await fetch(url, requestInit);
@@ -74,13 +62,15 @@ export class SafeProxy<TApi extends ApiSchema> {
     const responseBody = SafeProxy.parseJson(responseText);
 
     if (!response.ok) {
-      const errorCode = SafeProxy.parseErrorCode(responseBody);
-      throw new RequestError(errorCode);
+      const message =
+        responseBody instanceof Object
+          ? responseBody.message ?? responseBody.code ?? ''
+          : '';
+      throw new RequestError(message, responseBody);
     }
 
-    const body: ResponseBodyOf<TApi, TPath, TMethod> = responseBody;
     return {
-      body,
+      body: responseBody as ResponseBodyOf<TApi, TPath, TMethod>,
       headers: Object.fromEntries(response.headers.entries()),
       redirected: response.redirected,
       status: response.status,
