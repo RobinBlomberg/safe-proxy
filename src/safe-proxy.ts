@@ -1,9 +1,14 @@
-import { ApiSchema } from '@robinblomberg/safe-express';
+import { RouterSchema } from '@robinblomberg/safe-express';
 import fetch from 'isomorphic-unfetch';
 import JSON5 from 'json5';
-import { MethodOf, PathOf, RequestBodyOf, ResponseBodyOf } from '.';
+import { PathOf, PathWithMethodOf } from '.';
 import { RequestError } from './request-error';
-import { RequestPayload } from './types';
+import {
+  MethodOf,
+  RequestBodyOf,
+  RequestPayload,
+  ResponseBodyOf,
+} from './types';
 
 /**
  * Naïve but simple date regex.
@@ -12,7 +17,7 @@ import { RequestPayload } from './types';
 const DATE_REGEX =
   /^[0-9]{4}-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-6][0-9]:[0-9]{2}\.[0-9]{3}Z$/;
 
-export class SafeProxy<TApi extends ApiSchema> {
+export class SafeProxy<TApi extends RouterSchema> {
   /**
    * TODO: Use a Zod schema to identify specified dates in order to avoid accidental conversions.
    */
@@ -28,7 +33,7 @@ export class SafeProxy<TApi extends ApiSchema> {
     this.#baseUrl = baseUrl;
   }
 
-  async request<
+  async #request<
     TPath extends PathOf<TApi>,
     TMethod extends MethodOf<TApi, TPath>,
     TBody extends RequestBodyOf<TApi, TPath, TMethod>,
@@ -87,5 +92,54 @@ export class SafeProxy<TApi extends ApiSchema> {
       statusText: response.statusText,
       url: response.url,
     };
+  }
+
+  delete<
+    TPath extends PathWithMethodOf<TApi, 'delete'>,
+    TBody extends RequestBodyOf<TApi, TPath, 'delete'>,
+  >(path: TPath, payload: RequestPayload<TApi, TPath, 'delete', TBody> = {}) {
+    return this.#request('delete', path, payload);
+  }
+
+  get<
+    TPath extends PathWithMethodOf<TApi, 'get'>,
+    TBody extends RequestBodyOf<TApi, TPath, 'get'>,
+  >(path: TPath, payload: RequestPayload<TApi, TPath, 'get', TBody> = {}) {
+    return this.#request('get', path, payload);
+  }
+
+  head<
+    TPath extends PathWithMethodOf<TApi, 'head'>,
+    TBody extends RequestBodyOf<TApi, TPath, 'head'>,
+  >(path: TPath, payload: RequestPayload<TApi, TPath, 'head', TBody> = {}) {
+    return this.#request('head', path, payload);
+  }
+
+  options<
+    TPath extends PathWithMethodOf<TApi, 'options'>,
+    TBody extends RequestBodyOf<TApi, TPath, 'options'>,
+  >(path: TPath, payload: RequestPayload<TApi, TPath, 'options', TBody> = {}) {
+    return this.#request('options', path, payload);
+  }
+
+  patch<
+    TPath extends PathWithMethodOf<TApi, 'patch'>,
+    TBody extends RequestBodyOf<TApi, TPath, 'patch'>,
+  >(path: TPath, payload: RequestPayload<TApi, TPath, 'patch', TBody> = {}) {
+    return this.#request('patch', path, payload);
+  }
+
+  post<
+    TPath extends PathWithMethodOf<TApi, 'post'>,
+    TBody extends RequestBodyOf<TApi, TPath, 'post'>,
+  >(path: TPath, payload: RequestPayload<TApi, TPath, 'post', TBody> = {}) {
+    return this.#request('post', path, payload);
+  }
+
+  put<
+    TPath extends PathWithMethodOf<TApi, 'put'>,
+    TBody extends RequestBodyOf<TApi, TPath, 'put'>,
+  >(path: TPath, payload: RequestPayload<TApi, TPath, 'put', TBody> = {}) {
+    return this.#request('put', path, payload);
   }
 }

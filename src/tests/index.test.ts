@@ -4,12 +4,6 @@ import express from 'express';
 import { z } from 'zod';
 import { RequestError, SafeProxy } from '..';
 
-type Api = {
-  '/api/v1/health': HealthApi;
-};
-
-type HealthApi = typeof healthApi;
-
 const companyRequestSchema = z.strictObject({
   company: z.strictObject({
     employees: z.array(
@@ -28,7 +22,7 @@ const companyRequestSchema = z.strictObject({
   }),
 });
 
-const healthApi = {
+const api = {
   '/': {
     post: {
       requestBody: z.strictObject({
@@ -77,9 +71,9 @@ const healthApi = {
 
 const app = express();
 
-const healthRouter = new Router<HealthApi>(healthApi);
+const router = new Router(api);
 
-healthRouter.post('/', (req, res) => {
+router.post('/', (req, res) => {
   res.json({
     date1: '2021-12-03T09:58:55.483Z',
     date2: new Date(1638525535483),
@@ -89,35 +83,37 @@ healthRouter.post('/', (req, res) => {
   });
 });
 
-healthRouter.get('/echo', (req, res) => {
+router.get('/echo', (req, res) => {
   res.json(req.query);
 });
 
-healthRouter.get('/error/with-code', (req, res) => {
+router.get('/error/with-code', (req, res) => {
   res.status(400).json({
     code: 'custom_error_code',
   });
 });
 
-healthRouter.get('/error/without-code', (req, res) => {
+router.get('/error/without-code', (req, res) => {
   res.status(400).json(null);
 });
 
-healthRouter.get('/post/:postId/comment/:commentId', (req, res) => {
+router.get('/post/:postId/comment/:commentId', (req, res) => {
   res.json({
     commentId: req.params.commentId,
     postId: req.params.postId,
   });
 });
 
-app.use('/api/v1/health', healthRouter.router);
+app.use('/api/v1/health', router.router);
 
 app.listen(3030, async () => {
-  const proxy = new SafeProxy<Api>('http://localhost:3030');
+  const proxy = new SafeProxy<typeof api>(
+    'http://localhost:3030/api/v1/health',
+  );
 
   // Test success responses:
   {
-    const response = await proxy.request('post', '/api/v1/health', {
+    const response = await proxy.post('/', {
       body: {
         name: 'Frank',
       },
@@ -141,14 +137,14 @@ app.listen(3030, async () => {
     strictEqual(response.redirected, false);
     strictEqual(response.status, 200);
     strictEqual(response.statusText, 'OK');
-    strictEqual(response.url, 'http://localhost:3030/api/v1/health');
+    strictEqual(response.url, 'http://localhost:3030/api/v1/health/');
   }
 
   // Test error responses:
   {
     void rejects(
       () => {
-        return proxy.request('get', '/api/v1/health/error/with-code');
+        return proxy.get('/error/with-code');
       },
       new RequestError('custom_error_code', {
         code: 'custom_error_code',
@@ -156,22 +152,18 @@ app.listen(3030, async () => {
     );
 
     void rejects(() => {
-      return proxy.request('get', '/api/v1/health/error/without-code');
+      return proxy.get('/error/without-code');
     }, new RequestError('', null));
   }
 
   // Test params:
   {
-    const response = await proxy.request(
-      'get',
-      '/api/v1/health/post/:postId/comment/:commentId',
-      {
-        params: {
-          commentId: 13,
-          postId: '5',
-        },
+    const response = await proxy.get('/post/:postId/comment/:commentId', {
+      params: {
+        commentId: 13,
+        postId: '5',
       },
-    );
+    });
 
     deepStrictEqual(response.body, {
       commentId: 13,
@@ -199,9 +191,7 @@ app.listen(3030, async () => {
       },
     };
 
-    const response = await proxy.request('get', '/api/v1/health/echo', {
-      query,
-    });
+    const response = await proxy.get('/echo', { query });
 
     deepStrictEqual(query, response.body);
   }
