@@ -12,10 +12,6 @@ import { RequestPayload } from './types';
 const DATE_REGEX =
   /^[0-9]{4}-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-6][0-9]:[0-9]{2}\.[0-9]{3}Z$/;
 
-export type ErrorResponseBody = {
-  code: string;
-};
-
 export class SafeProxy<TApi extends ApiSchema> {
   /**
    * TODO: Use a Zod schema to identify specified dates in order to avoid accidental conversions.
@@ -36,7 +32,11 @@ export class SafeProxy<TApi extends ApiSchema> {
     TPath extends PathOf<TApi>,
     TMethod extends MethodOf<TApi, TPath>,
     TBody extends RequestBodyOf<TApi, TPath, TMethod>,
-  >(method: TMethod, path: TPath, payload: RequestPayload<TBody> = {}) {
+  >(
+    method: TMethod,
+    path: TPath,
+    payload: RequestPayload<TApi, TPath, TMethod, TBody> = {},
+  ) {
     const headers = { ...(payload.headers ?? {}) };
     const requestInit: RequestInit = {
       headers,
@@ -51,6 +51,16 @@ export class SafeProxy<TApi extends ApiSchema> {
 
     if (payload.credentials) {
       requestInit.credentials = 'include';
+    }
+
+    if (payload.params) {
+      for (const param in payload.params) {
+        if (Object.prototype.hasOwnProperty.call(payload.params, param)) {
+          const regex = new RegExp(`:${param}`, 'g');
+          const value = String(payload.params[param]);
+          url = url.replace(regex, value);
+        }
+      }
     }
 
     if (payload.query !== undefined) {

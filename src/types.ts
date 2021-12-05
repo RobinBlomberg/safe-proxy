@@ -1,4 +1,5 @@
 import { ApiSchema, Method, RequestShape } from '@robinblomberg/safe-express';
+import { RouteParameters } from 'express-serve-static-core';
 import { z } from 'zod';
 
 export type InputPath<T extends string> = RemoveInterpolation<
@@ -10,7 +11,16 @@ export type MethodOf<
   TPath extends PathOf<TApi>,
 > = keyof FlattenedApiSchema<TApi>[TPath] & Method;
 
-export type PathOf<TApi extends ApiSchema> = keyof FlattenedApiSchema<TApi>;
+export type ParamsOf<
+  TApi extends ApiSchema,
+  TPath extends PathOf<TApi>,
+  TMethod extends MethodOf<TApi, TPath>,
+> = {
+  [K in keyof RouteParameters<TPath>]: string | number;
+} & RequestShape<FlattenedApiSchema<TApi>[TPath][TMethod]>['params'];
+
+export type PathOf<TApi extends ApiSchema> = keyof FlattenedApiSchema<TApi> &
+  string;
 
 /**
  * @example
@@ -39,10 +49,16 @@ export type RequestBodyOf<
   TMethod extends MethodOf<TApi, TPath>,
 > = RequestShape<FlattenedApiSchema<TApi>[TPath][TMethod]>['requestBody'];
 
-export type RequestPayload<TBody> = {
+export type RequestPayload<
+  TApi extends ApiSchema,
+  TPath extends PathOf<TApi>,
+  TMethod extends MethodOf<TApi, TPath>,
+  TBody extends RequestBodyOf<TApi, TPath, TMethod>,
+> = {
   body?: TBody;
   credentials?: 'include';
   headers?: Record<string, string>;
+  params?: ParamsOf<TApi, TPath, TMethod>;
   query?: unknown;
 };
 

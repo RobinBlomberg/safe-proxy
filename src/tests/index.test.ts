@@ -61,6 +61,18 @@ const healthApi = {
       responseBody: z.null(),
     },
   },
+  '/post/:postId/comment/:commentId': {
+    get: {
+      params: {
+        commentId: z.number(),
+        postId: z.string(),
+      },
+      responseBody: z.strictObject({
+        commentId: z.number(),
+        postId: z.string(),
+      }),
+    },
+  },
 };
 
 const app = express();
@@ -89,6 +101,13 @@ healthRouter.get('/error/with-code', (req, res) => {
 
 healthRouter.get('/error/without-code', (req, res) => {
   res.status(400).json(null);
+});
+
+healthRouter.get('/post/:postId/comment/:commentId', (req, res) => {
+  res.json({
+    commentId: req.params.commentId,
+    postId: req.params.postId,
+  });
 });
 
 app.use('/api/v1/health', healthRouter.router);
@@ -141,6 +160,25 @@ app.listen(3030, async () => {
     }, new RequestError('', null));
   }
 
+  // Test params:
+  {
+    const response = await proxy.request(
+      'get',
+      '/api/v1/health/post/:postId/comment/:commentId',
+      {
+        params: {
+          commentId: 13,
+          postId: '5',
+        },
+      },
+    );
+
+    deepStrictEqual(response.body, {
+      commentId: 13,
+      postId: '5',
+    });
+  }
+
   // Test queries:
   {
     const query = {
@@ -168,6 +206,5 @@ app.listen(3030, async () => {
     deepStrictEqual(query, response.body);
   }
 
-  // eslint-disable-next-line no-console
-  console.log('All tests passed.');
+  console.info('All tests passed.');
 });
