@@ -146,14 +146,14 @@ app.listen(3030, async () => {
       () => {
         return proxy.get('/error/with-code');
       },
-      new RequestError('custom_error_code', {
+      new RequestError('custom_error_code', '', {
         code: 'custom_error_code',
       }),
     );
 
     void rejects(() => {
       return proxy.get('/error/without-code');
-    }, new RequestError('', null));
+    }, new RequestError('', '', null));
   }
 
   // Test params:

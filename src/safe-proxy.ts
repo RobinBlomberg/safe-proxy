@@ -77,11 +77,11 @@ export class SafeProxy<TApi extends RouterSchema> {
     const responseBody = SafeProxy.parseJson(responseText);
 
     if (!response.ok) {
+      const code =
+        responseBody instanceof Object ? responseBody.code : '' ?? '';
       const message =
-        responseBody instanceof Object
-          ? responseBody.message ?? responseBody.code ?? ''
-          : '';
-      throw new RequestError(message, responseBody);
+        responseBody instanceof Object ? responseBody.message : '' ?? code;
+      throw new RequestError(code, message, responseBody);
     }
 
     return {
