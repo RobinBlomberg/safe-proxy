@@ -116,9 +116,9 @@ router.get('/post/:postId/comment/:commentId', (req, res) => {
 
 app.use('/api/v1/health', router.router);
 
-app.listen(3030, async () => {
+app.listen(3004, async () => {
   const proxy = new SafeProxy<typeof api>(
-    'http://localhost:3030/api/v1/health',
+    'http://localhost:3004/api/v1/health',
   );
 
   // Test success responses:
@@ -137,17 +137,17 @@ app.listen(3030, async () => {
       nonDate2: 'December 17, 1995 03:24:00',
     });
     strictEqual(response.headers.connection, 'close');
-    strictEqual(response.headers['content-length'], '152');
+    strictEqual(response.headers['content-length'], '173');
     strictEqual(
       response.headers['content-type'],
       'application/javascript; charset=utf-8',
     );
-    strictEqual(response.headers.etag, 'W/"98-BVDHD4qQ5HagLFQruzdx8mET+Gw"');
+    strictEqual(response.headers.etag, 'W/"ad-H/J5xFO0iQCEI6C3b49RnJGiEgw"');
     strictEqual(response.headers['x-powered-by'], 'Express');
     strictEqual(response.redirected, false);
     strictEqual(response.status, 200);
     strictEqual(response.statusText, 'OK');
-    strictEqual(response.url, 'http://localhost:3030/api/v1/health/');
+    strictEqual(response.url, 'http://localhost:3004/api/v1/health/');
   }
 
   // Test error responses:
