@@ -1,6 +1,6 @@
+import { ESON } from '@robinblomberg/eson';
 import { RouterSchema } from '@robinblomberg/safe-express';
 import fetch from 'isomorphic-unfetch';
-import JSON5 from 'json5';
 import { PathOf, PathWithMethodOf } from '.';
 import { RequestError } from './request-error';
 import {
@@ -10,23 +10,7 @@ import {
   ResponseBodyOf,
 } from './types';
 
-/**
- * Naïve but simple date regex.
- * Will also match incorrect dates such as 2021-19-39T29:69:99.123Z.
- */
-const DATE_REGEX =
-  /^[0-9]{4}-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-6][0-9]:[0-9]{2}\.[0-9]{3}Z$/;
-
 export class SafeProxy<TApi extends RouterSchema> {
-  /**
-   * TODO: Use a Zod schema to identify specified dates in order to avoid accidental conversions.
-   */
-  private static parseJson(string: string) {
-    return JSON.parse(string, (key, value) => {
-      return DATE_REGEX.test(value) ? new Date(value) : value;
-    });
-  }
-
   readonly #baseUrl: string;
 
   constructor(baseUrl: string) {
@@ -50,8 +34,8 @@ export class SafeProxy<TApi extends RouterSchema> {
     let url = `${this.#baseUrl}${path}`;
 
     if (payload.body !== undefined) {
-      requestInit.body = JSON.stringify(payload.body);
-      headers['Content-Type'] = 'application/json';
+      requestInit.body = ESON.stringify(payload.body);
+      headers['Content-Type'] = 'application/javascript';
     }
 
     if (payload.credentials) {
@@ -69,12 +53,12 @@ export class SafeProxy<TApi extends RouterSchema> {
     }
 
     if (payload.query !== undefined) {
-      url += `?${encodeURIComponent(JSON5.stringify(payload.query))}`;
+      url += `?${encodeURIComponent(ESON.stringify(payload.query))}`;
     }
 
     const response = await fetch(url, requestInit);
     const responseText = await response.text();
-    const responseBody = SafeProxy.parseJson(responseText);
+    const responseBody = ESON.parse(responseText);
 
     if (!response.ok) {
       const code =

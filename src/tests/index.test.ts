@@ -74,7 +74,7 @@ const app = express();
 const router = new Router(api);
 
 router.post('/', (req, res) => {
-  res.json({
+  res.eson({
     date1: '2021-12-03T09:58:55.483Z',
     date2: new Date(1638525535483),
     message: `Hello ${req.body.name}!`,
@@ -84,21 +84,21 @@ router.post('/', (req, res) => {
 });
 
 router.get('/echo', (req, res) => {
-  res.json(req.query);
+  res.eson(req.query);
 });
 
 router.get('/error/with-code', (req, res) => {
-  res.status(400).json({
+  res.status(400).eson({
     code: 'custom_error_code',
   });
 });
 
 router.get('/error/without-code', (req, res) => {
-  res.status(400).json(null);
+  res.status(400).eson(null);
 });
 
 router.get('/post/:postId/comment/:commentId', (req, res) => {
-  res.json({
+  res.eson({
     commentId: req.params.commentId,
     postId: req.params.postId,
   });
@@ -120,19 +120,19 @@ app.listen(3030, async () => {
     });
 
     deepStrictEqual(response.body, {
-      date1: new Date('2021-12-03T09:58:55.483Z'),
+      date1: '2021-12-03T09:58:55.483Z',
       date2: new Date('2021-12-03T09:58:55.483Z'),
       message: 'Hello Frank!',
       nonDate1: '1638525535483',
       nonDate2: 'December 17, 1995 03:24:00',
     });
     strictEqual(response.headers.connection, 'close');
-    strictEqual(response.headers['content-length'], '163');
+    strictEqual(response.headers['content-length'], '152');
     strictEqual(
       response.headers['content-type'],
-      'application/json; charset=utf-8',
+      'application/javascript; charset=utf-8',
     );
-    strictEqual(response.headers.etag, 'W/"a3-2vi0zMGzcPS01CYE3seV9NvrEL8"');
+    strictEqual(response.headers.etag, 'W/"98-BVDHD4qQ5HagLFQruzdx8mET+Gw"');
     strictEqual(response.headers['x-powered-by'], 'Express');
     strictEqual(response.redirected, false);
     strictEqual(response.status, 200);
