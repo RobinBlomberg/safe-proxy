@@ -43,6 +43,12 @@ const api = {
       responseBody: companyRequestSchema,
     },
   },
+  '/echo-json': {
+    get: {
+      query: companyRequestSchema,
+      responseBody: companyRequestSchema,
+    },
+  },
   '/error/with-code': {
     get: {
       responseBody: z.strictObject({
@@ -85,6 +91,10 @@ router.post('/', (req, res) => {
 
 router.get('/echo', (req, res) => {
   res.eson(req.query);
+});
+
+router.get('/echo-json', (req, res) => {
+  res.json(req.query);
 });
 
 router.get('/error/with-code', (req, res) => {
@@ -191,9 +201,34 @@ app.listen(3030, async () => {
       },
     };
 
-    const response = await proxy.get('/echo', { query });
+    // ESON:
+    {
+      const response = await proxy.get('/echo', { query });
+      deepStrictEqual(response.body, query);
+    }
 
-    deepStrictEqual(query, response.body);
+    // JSON:
+    {
+      const response = await proxy.get('/echo-json', { query });
+      deepStrictEqual(response.body, {
+        company: {
+          employees: [
+            {
+              email: 'frank@example.com',
+              name: 'Frank',
+              projects: [
+                {
+                  // Converted to string:
+                  createdAt: '2021-12-03T09:58:55.483Z',
+                  title: 'Untitled Project',
+                },
+              ],
+            },
+          ],
+          name: "Frank's Company",
+        },
+      });
+    }
   }
 
   console.info('All tests passed.');

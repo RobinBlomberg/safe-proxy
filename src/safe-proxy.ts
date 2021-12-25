@@ -17,6 +17,20 @@ export class SafeProxy<TApi extends RouterSchema> {
     this.#baseUrl = baseUrl;
   }
 
+  #parseResponseBody(contentType: string, text: string) {
+    const mediaType = contentType.slice(0, contentType.indexOf(';'));
+    switch (mediaType) {
+      case 'application/javascript':
+      case 'text/javascript':
+        return ESON.parse(text);
+      case 'application/json':
+      case 'text/json':
+        return JSON.parse(text);
+      default:
+        return text;
+    }
+  }
+
   async #request<
     TPath extends PathOf<TApi>,
     TMethod extends MethodOf<TApi, TPath>,
@@ -58,7 +72,12 @@ export class SafeProxy<TApi extends RouterSchema> {
 
     const response = await fetch(url, requestInit);
     const responseText = await response.text();
-    const responseBody = ESON.parse(responseText);
+
+    const contentType = response.headers.get('Content-Type');
+    const responseBody = this.#parseResponseBody(
+      contentType ?? '',
+      responseText,
+    );
 
     if (!response.ok) {
       const code =
