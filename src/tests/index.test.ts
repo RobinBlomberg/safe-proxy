@@ -84,6 +84,7 @@ router.post('/', (req, res) => {
     date1: '2021-12-03T09:58:55.483Z',
     date2: new Date(1638525535483),
     message: `Hello ${req.body.name}!`,
+    newlines: 'foo\r\nbar\n',
     nonDate1: '1638525535483',
     nonDate2: 'December 17, 1995 03:24:00',
   });
@@ -133,16 +134,16 @@ app.listen(3004, async () => {
       date1: '2021-12-03T09:58:55.483Z',
       date2: new Date('2021-12-03T09:58:55.483Z'),
       message: 'Hello Frank!',
+      newlines: 'foo\r\nbar\n',
       nonDate1: '1638525535483',
       nonDate2: 'December 17, 1995 03:24:00',
     });
     strictEqual(response.headers.connection, 'close');
-    strictEqual(response.headers['content-length'], '173');
     strictEqual(
       response.headers['content-type'],
       'application/javascript; charset=utf-8',
     );
-    strictEqual(response.headers.etag, 'W/"ad-H/J5xFO0iQCEI6C3b49RnJGiEgw"');
+    strictEqual(typeof response.headers.etag, 'string');
     strictEqual(response.headers['x-powered-by'], 'Express');
     strictEqual(response.redirected, false);
     strictEqual(response.status, 200);
