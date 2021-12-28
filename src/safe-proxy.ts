@@ -1,14 +1,9 @@
 import { ESON } from '@robinblomberg/eson';
-import { RouterSchema } from '@robinblomberg/safe-express';
+import { Method, Path, RouterSchema } from '@robinblomberg/safe-express';
 import fetch from 'isomorphic-unfetch';
-import { PathOf, PathWithMethodOf } from '.';
+import { PathWithMethodOf } from '.';
 import { RequestError } from './request-error';
-import {
-  MethodOf,
-  RequestBodyOf,
-  RequestPayload,
-  ResponseBodyOf,
-} from './types';
+import { RequestPayload, ResponseBodyOf } from './types';
 
 export class SafeProxy<TApi extends RouterSchema> {
   readonly #baseUrl: string;
@@ -32,13 +27,12 @@ export class SafeProxy<TApi extends RouterSchema> {
   }
 
   async #request<
-    TPath extends PathOf<TApi>,
-    TMethod extends MethodOf<TApi, TPath>,
-    TBody extends RequestBodyOf<TApi, TPath, TMethod>,
+    TPath extends keyof TApi & Path,
+    TMethod extends keyof TApi[TPath] & Method,
   >(
     method: TMethod,
     path: TPath,
-    payload: RequestPayload<TApi, TPath, TMethod, TBody> = {},
+    payload: RequestPayload<TApi, TPath, TMethod> = {},
   ) {
     const headers = { ...(payload.headers ?? {}) };
     const requestInit: RequestInit = {
@@ -47,7 +41,7 @@ export class SafeProxy<TApi extends RouterSchema> {
     };
     let url = `${this.#baseUrl}${path}`;
 
-    if (payload.body !== undefined) {
+    if (Object.prototype.hasOwnProperty.call(payload, 'body')) {
       requestInit.body = ESON.stringify(payload.body);
       headers['Content-Type'] = 'application/javascript';
     }
@@ -97,52 +91,52 @@ export class SafeProxy<TApi extends RouterSchema> {
     };
   }
 
-  delete<
-    TPath extends PathWithMethodOf<TApi, 'delete'>,
-    TBody extends RequestBodyOf<TApi, TPath, 'delete'>,
-  >(path: TPath, payload: RequestPayload<TApi, TPath, 'delete', TBody> = {}) {
+  delete<TPath extends PathWithMethodOf<TApi, 'delete'>>(
+    path: TPath,
+    payload: RequestPayload<TApi, TPath, 'delete'> = {},
+  ) {
     return this.#request('delete', path, payload);
   }
 
-  get<
-    TPath extends PathWithMethodOf<TApi, 'get'>,
-    TBody extends RequestBodyOf<TApi, TPath, 'get'>,
-  >(path: TPath, payload: RequestPayload<TApi, TPath, 'get', TBody> = {}) {
+  get<TPath extends PathWithMethodOf<TApi, 'get'>>(
+    path: TPath,
+    payload: RequestPayload<TApi, TPath, 'get'> = {},
+  ) {
     return this.#request('get', path, payload);
   }
 
-  head<
-    TPath extends PathWithMethodOf<TApi, 'head'>,
-    TBody extends RequestBodyOf<TApi, TPath, 'head'>,
-  >(path: TPath, payload: RequestPayload<TApi, TPath, 'head', TBody> = {}) {
+  head<TPath extends PathWithMethodOf<TApi, 'head'>>(
+    path: TPath,
+    payload: RequestPayload<TApi, TPath, 'head'> = {},
+  ) {
     return this.#request('head', path, payload);
   }
 
-  options<
-    TPath extends PathWithMethodOf<TApi, 'options'>,
-    TBody extends RequestBodyOf<TApi, TPath, 'options'>,
-  >(path: TPath, payload: RequestPayload<TApi, TPath, 'options', TBody> = {}) {
+  options<TPath extends PathWithMethodOf<TApi, 'options'>>(
+    path: TPath,
+    payload: RequestPayload<TApi, TPath, 'options'> = {},
+  ) {
     return this.#request('options', path, payload);
   }
 
-  patch<
-    TPath extends PathWithMethodOf<TApi, 'patch'>,
-    TBody extends RequestBodyOf<TApi, TPath, 'patch'>,
-  >(path: TPath, payload: RequestPayload<TApi, TPath, 'patch', TBody> = {}) {
+  patch<TPath extends PathWithMethodOf<TApi, 'patch'>>(
+    path: TPath,
+    payload: RequestPayload<TApi, TPath, 'patch'> = {},
+  ) {
     return this.#request('patch', path, payload);
   }
 
-  post<
-    TPath extends PathWithMethodOf<TApi, 'post'>,
-    TBody extends RequestBodyOf<TApi, TPath, 'post'>,
-  >(path: TPath, payload: RequestPayload<TApi, TPath, 'post', TBody> = {}) {
+  post<TPath extends PathWithMethodOf<TApi, 'post'>>(
+    path: TPath,
+    payload: RequestPayload<TApi, TPath, 'post'> = {},
+  ) {
     return this.#request('post', path, payload);
   }
 
-  put<
-    TPath extends PathWithMethodOf<TApi, 'put'>,
-    TBody extends RequestBodyOf<TApi, TPath, 'put'>,
-  >(path: TPath, payload: RequestPayload<TApi, TPath, 'put', TBody> = {}) {
+  put<TPath extends PathWithMethodOf<TApi, 'put'>>(
+    path: TPath,
+    payload: RequestPayload<TApi, TPath, 'put'> = {},
+  ) {
     return this.#request('put', path, payload);
   }
 }

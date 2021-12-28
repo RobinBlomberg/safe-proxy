@@ -32,6 +32,7 @@ const api = {
         date1: z.string(),
         date2: z.date(),
         message: z.string(),
+        newlines: z.string(),
         nonDate1: z.string(),
         nonDate2: z.string(),
       }),
@@ -71,6 +72,12 @@ const api = {
         commentId: z.number(),
         postId: z.string(),
       }),
+    },
+  },
+  '/undefined': {
+    post: {
+      requestBody: z.strictObject({ message: z.string() }).optional(),
+      responseBody: z.strictObject({ message: z.string() }).optional(),
     },
   },
 };
@@ -113,6 +120,10 @@ router.get('/post/:postId/comment/:commentId', (req, res) => {
     commentId: req.params.commentId,
     postId: req.params.postId,
   });
+});
+
+router.post('/undefined', (req, res) => {
+  res.eson(req.body);
 });
 
 app.use('/api/v1/health', router.router);
@@ -230,6 +241,14 @@ app.listen(3004, async () => {
         },
       });
     }
+  }
+
+  // Test undefined request bodies:
+  {
+    const response = await proxy.post('/undefined', {
+      body: undefined,
+    });
+    strictEqual(response.body, undefined);
   }
 
   console.info('All tests passed.');
